@@ -1,0 +1,7 @@
+# Gerçek veri dosyaları (kişisel bilgi içerir)
+*.xlsx
+*.csv
+!tests/fixtures/*.csv
+bakim-analizleri/
+__pycache__/
+.pytest_cache/
