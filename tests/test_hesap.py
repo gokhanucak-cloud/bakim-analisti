@@ -107,3 +107,48 @@ def test_ro_ozeti_hedef_orani():
     assert r["calisilmayan"] == [{"tarih": "2026-10-17", "vardiya": "Sabah"}]
     assert r["vardiya_ro"][0] == {"tarih": "2026-10-05", "vardiya": "Sabah", "ekip": 1,
                                   "uretim": 517, "ro": pytest.approx(517 / 519)}
+
+
+# --- Görev 3: Pareto ve mikro duruşlar ---
+from hesap import mikro_analiz, pareto  # noqa: E402
+
+
+def _kayiplar(dagilim):
+    """{posta: [süreler]} → temiz DataFrame."""
+    satirlar = []
+    for posta, sureler in dagilim.items():
+        for i, s in enumerate(sureler):
+            satirlar.append((f"2026-10-05 08:{i:02d}", s, posta, f"n-{posta}", "Sabah", 1, 500))
+    return _temiz(satirlar)[2]
+
+
+def test_pareto_kesim():
+    p = pareto(_kayiplar({"A": [50], "B": [30], "C": [15], "D": [5]}), ["posta"], AYAR)
+    assert [r["posta"] for r in p] == ["A", "B", "C", "D"]
+    assert [r["posta"] for r in p if r["oncelik"]] == ["A", "B"]
+    assert p[1]["kumulatif_yuzde"] == pytest.approx(80.0)
+    assert p[0]["yuzde"] == pytest.approx(50.0)
+    assert p[0]["kayip_motor"] == pytest.approx(50 / AYAR["takt_dk"])
+
+
+def test_pareto_ilk_eleman_her_zaman_oncelik():
+    p = pareto(_kayiplar({"A": [90], "B": [10]}), ["posta"], AYAR)
+    assert p[0]["oncelik"] is True and p[1]["oncelik"] is False
+
+
+def test_baskin_tur():
+    p = pareto(_kayiplar({"A": [6] + [2] * 10}), ["posta"], AYAR)
+    assert p[0]["baskin_tur"] == "mikro" and p[0]["adet"] == 11
+    assert p[0]["ariza_dk"] == 6 and p[0]["mikro_dk"] == 20
+
+
+def test_pareto_neden_ilk():
+    p = pareto(_kayiplar({f"P{i}": [i + 1] for i in range(15)}), ["posta", "neden"], AYAR, ilk=10)
+    assert len(p) == 10 and p[0]["posta"] == "P14" and p[0]["neden"] == "n-P14"
+
+
+def test_mikro_saatte_adet():
+    temiz = _kayiplar({"A": [0.1] * 29, "B": [6]})
+    m = mikro_analiz(temiz, 14.5)
+    assert len(m) == 1 and m[0]["posta"] == "A" and m[0]["adet"] == 29
+    assert m[0]["saatte_adet"] == pytest.approx(2.0)

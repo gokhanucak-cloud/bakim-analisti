@@ -82,3 +82,39 @@ def ro_ozeti(vardiyalar: pd.DataFrame, ayar: dict) -> dict:
         "vardiya_ro": [{"tarih": str(r.tarih), "vardiya": r.vardiya, "ekip": _python(r.ekip),
                         "uretim": int(r.uretim), "ro": float(r.ro)} for r in c.itertuples()],
     }
+
+
+def pareto(temiz: pd.DataFrame, anahtar: list[str], ayar: dict,
+           ilk: int | None = None) -> list[dict]:
+    toplam = float(temiz["sure_dk"].sum())
+    g = temiz.assign(
+        ariza_dk=temiz["sure_dk"].where(temiz["tur"] == "ariza", 0.0),
+        mikro_dk=temiz["sure_dk"].where(temiz["tur"] == "mikro", 0.0),
+    ).groupby(anahtar).agg(toplam_kayip_dk=("sure_dk", "sum"), adet=("sure_dk", "size"),
+                           ariza_dk=("ariza_dk", "sum"), mikro_dk=("mikro_dk", "sum"))
+    g = g.sort_values("toplam_kayip_dk", ascending=False).reset_index()
+    sonuc, kumulatif = [], 0.0
+    kesim = ayar["pareto_kesim"] * 100
+    for r in g.to_dict("records"):
+        yuzde = r["toplam_kayip_dk"] / toplam * 100 if toplam else 0.0
+        onceki = kumulatif
+        kumulatif += yuzde
+        sonuc.append({
+            **{k: _python(r[k]) for k in anahtar},
+            "toplam_kayip_dk": float(r["toplam_kayip_dk"]), "adet": int(r["adet"]),
+            "ariza_dk": float(r["ariza_dk"]), "mikro_dk": float(r["mikro_dk"]),
+            "kayip_motor": float(r["toplam_kayip_dk"]) / ayar["takt_dk"],
+            "yuzde": yuzde, "kumulatif_yuzde": kumulatif,
+            "oncelik": bool(onceki < kesim - 1e-9),
+            "baskin_tur": "ariza" if r["ariza_dk"] > r["mikro_dk"] else "mikro",
+        })
+    return sonuc[:ilk] if ilk else sonuc
+
+
+def mikro_analiz(temiz: pd.DataFrame, calisilan_saat: float, ilk: int = 10) -> list[dict]:
+    m = temiz[temiz["tur"] == "mikro"]
+    g = (m.groupby(["posta", "neden"])["sure_dk"].agg(adet="size", mikro_dk="sum")
+         .reset_index().sort_values(["mikro_dk", "adet"], ascending=False).head(ilk))
+    return [{"posta": r.posta, "neden": r.neden, "adet": int(r.adet), "mikro_dk": float(r.mikro_dk),
+             "saatte_adet": r.adet / calisilan_saat if calisilan_saat else None}
+            for r in g.itertuples()]
