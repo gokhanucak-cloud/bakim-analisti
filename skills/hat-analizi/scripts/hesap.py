@@ -118,3 +118,52 @@ def mikro_analiz(temiz: pd.DataFrame, calisilan_saat: float, ilk: int = 10) -> l
     return [{"posta": r.posta, "neden": r.neden, "adet": int(r.adet), "mikro_dk": float(r.mikro_dk),
              "saatte_adet": r.adet / calisilan_saat if calisilan_saat else None}
             for r in g.itertuples()]
+
+
+KORUYUCU = "Koruyucu Bakım"
+
+
+def bakim_eslestir(bakim: pd.DataFrame, temiz: pd.DataFrame, ayar: dict,
+                   donem: tuple[pd.Timestamp, pd.Timestamp]) -> tuple[list[dict], list[str]]:
+    uyarilar: list[str] = []
+    ariza = bakim[bakim["ariza_tipi"] != KORUYUCU]
+    icinde = ariza[(ariza["baslama"] >= donem[0]) & (ariza["baslama"] <= donem[1])]
+    if len(icinde) < len(ariza):
+        uyarilar.append(f"Duruş dosyasının dönemi dışında kalan {len(ariza) - len(icinde)} iş emri "
+                        f"eşleştirmeye alınmadı.")
+    gun = pd.Timedelta(days=ayar["kalicilik_gun"])
+    pay = pd.Timedelta(hours=ayar["eslesme_oncesi_saat"])
+    sonuc = []
+    for ie in icinde.sort_values("baslama").itertuples():
+        posta = temiz[temiz["posta"] == ie.posta]
+        pencere = posta[(posta["baslangic"] >= ie.baslama - pay) & (posta["baslangic"] <= ie.bitis)]
+        kayit = {
+            "is_emri": ie.is_emri, "posta": ie.posta, "ariza_tipi": ie.ariza_tipi,
+            "ariza_tanimi": ie.ariza_tanimi, "ariza_nedeni": ie.ariza_nedeni,
+            "yapilan_mudahale": ie.yapilan_mudahale, "baslama": ie.baslama.isoformat(),
+            "hedef_neden": None, "once": 0, "sonra": None, "sinif": "Eşleşmedi",
+        }
+        if len(pencere):
+            hedef = pencere.groupby("neden")["sure_dk"].sum().idxmax()
+            ayni = posta[posta["neden"] == hedef]["baslangic"]
+            once = int(((ayni >= ie.baslama - gun) & (ayni < ie.baslama)).sum())
+            kayit.update(hedef_neden=hedef, once=once)
+            if ie.bitis + gun > donem[1]:
+                kayit["sinif"] = "Takipte"
+            else:
+                sonra = int(((ayni > ie.bitis) & (ayni <= ie.bitis + gun)).sum())
+                kayit["sonra"] = sonra
+                kayit["sinif"] = ("Kalıcı" if sonra == 0 else
+                                  "Kısmi" if sonra <= once / 2 else "Kalıcı değil")
+        sonuc.append(kayit)
+    return sonuc, uyarilar
+
+
+def kayitsiz_kronikler(pareto_neden: list[dict], bakim: pd.DataFrame) -> list[dict]:
+    kayitli = set(bakim.loc[bakim["ariza_tipi"] != KORUYUCU, "posta"])
+    return [r for r in pareto_neden if r["posta"] not in kayitli]
+
+
+def koruyucu_bakim_ozeti(bakim: pd.DataFrame) -> dict:
+    kb = bakim[bakim["ariza_tipi"] == KORUYUCU]
+    return {"adet": int(len(kb)), "posta_sayisi": int(kb["posta"].nunique())}
