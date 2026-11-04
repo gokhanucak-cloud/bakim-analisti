@@ -56,7 +56,8 @@ def durus_oku(yol: Path) -> tuple[pd.DataFrame, list[str]]:
         ham = pd.read_excel(yol, sheet_name=DURUS_SAYFA, header=DURUS_BASLIK_SATIRI)
     except Exception as e:  # dosya Excel değil ya da sayfa yok
         raise VeriHatasi(f"Duruş dosyası okunamadı ({yol.name}): '{DURUS_SAYFA}' sayfası olan bir "
-                         f"SMP99 Excel çıktısı bekleniyor. Ayrıntı: {e}") from e
+                         f"SMP99 Excel çıktısı bekleniyor (başlık 7. satırda). Beklenen sütunlar: "
+                         f"{', '.join(DURUS_SUTUNLARI)}. Ayrıntı: {e}") from e
     _eksik_kontrol(ham, DURUS_SUTUNLARI, "Duruş")
     uyarilar: list[str] = []
     ham = ham[ham["Posta"].notna()].copy()

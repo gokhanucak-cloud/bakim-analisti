@@ -119,3 +119,13 @@ def test_kayitsiz_kronik_donem_disi_is_emri_sayilmaz():
     p = [{"posta": "OP311", "neden": "YAG ESANJORU NOK"}]
     bakim = bakim_df([("8", "Mekanik", "OP311", "2026-09-28 09:00", "2026-09-28 09:30")])
     assert [x["posta"] for x in kayitsiz_kronikler(p, bakim, DONEM)] == ["OP311"]
+
+
+def test_donem_ilk_gun_sabahi_dahil():
+    from hesap import analiz_et
+    df = durus_df([("2026-10-05 07:35", 8, "OP170", "röle", "Sabah", 1, 500),
+                   ("2026-10-06 09:00", 1, "OP170", "x", "Sabah", 1, 500)])
+    ie = bakim_df([("9", "Elektrik", "OP170", "2026-10-05 07:00", "2026-10-05 07:50")])
+    s = analiz_et(df, ie, AYAR, [])
+    assert s["bakim_eslesme"][0]["hedef_neden"] == "röle"
+    assert not any("dönem" in u or "örtüşmüyor" in u for u in s["uyarilar"])

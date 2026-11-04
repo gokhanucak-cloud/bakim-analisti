@@ -66,7 +66,11 @@ def kirilim(temiz: pd.DataFrame, vardiyalar: pd.DataFrame, ayar: dict,
             n = int((calisilan["vardiya"] == deger).sum())
         else:  # posta ve ekip her çalışılan vardiyada bulunabilir
             n = int(len(calisilan))
-        sonuc.append({alan: _python(deger), **kpi(grup, n, ayar)})
+        satir = {alan: _python(deger), **kpi(grup, n, ayar)}
+        if alan == "vardiya":
+            ro = calisilan.loc[calisilan["vardiya"] == deger, "ro"]
+            satir["ortalama_ro"] = float(ro.mean()) if len(ro) else None
+        sonuc.append(satir)
     return sorted(sonuc, key=lambda r: r["toplam_kayip_dk"], reverse=True)
 
 
@@ -79,6 +83,9 @@ def ro_ozeti(vardiyalar: pd.DataFrame, ayar: dict) -> dict:
         "gercek_kayip_motor": int((ayar["vardiya_hedefi"] - c["uretim"]).clip(lower=0).sum()),
         "calisilmayan": [{"tarih": str(r.tarih), "vardiya": r.vardiya}
                          for r in vardiyalar[~vardiyalar["calisildi"]].itertuples()],
+        "gun_ro": [{"tarih": str(t), "uretim": int(g["uretim"].sum()),
+                    "ro": float(g["uretim"].sum() / (len(g) * ayar["vardiya_hedefi"]))}
+                   for t, g in c.groupby("tarih")],
         "vardiya_ro": [{"tarih": str(r.tarih), "vardiya": r.vardiya, "ekip": _python(r.ekip),
                         "uretim": int(r.uretim), "ro": float(r.ro)} for r in c.itertuples()],
     }
@@ -184,7 +191,9 @@ def analiz_et(durus: pd.DataFrame, bakim: pd.DataFrame, ayar: dict,
     temiz, anomaliler = ayikla(durus, vardiyalar, ayar)
     ro = ro_ozeti(vardiyalar, ayar)
     n = ro["calisilan_vardiya"]
-    donem = (durus["baslangic"].min(), durus["baslangic"].max())
+    # Dönem: ilk duruş gününün başından son duruş gününün sonuna
+    donem = (durus["baslangic"].min().normalize(),
+             durus["baslangic"].max().normalize() + pd.Timedelta(days=1) - pd.Timedelta(seconds=1))
     if len(bakim) and (bakim["baslama"].max() < donem[0] or bakim["baslama"].min() > donem[1]):
         uyarilar.append("Bakım defterinin tarihleri duruş dosyasının dönemiyle örtüşmüyor.")
     motor = ro["gercek_kayip_motor"]
@@ -209,6 +218,7 @@ def analiz_et(durus: pd.DataFrame, bakim: pd.DataFrame, ayar: dict,
             **kpi(temiz, n, ayar),
         },
         "vardiya_ro": ro["vardiya_ro"],
+        "gun_ro": ro["gun_ro"],
         "pareto_posta": pareto(temiz, ["posta"], ayar, toplam_kayip_motor=motor),
         "pareto_neden": pareto_neden,
         "kirilim_posta": kirilim(temiz, vardiyalar, ayar, "posta")[:15],

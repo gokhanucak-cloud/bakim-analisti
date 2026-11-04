@@ -109,3 +109,9 @@ def test_dosya_bul(tmp_path):
 def test_dosya_bul_bulamazsa(tmp_path):
     with pytest.raises(VeriHatasi):
         dosya_bul(tmp_path)
+
+
+def test_durus_hata_beklenen_basliklari_listeler(tmp_path):
+    yol = bakim_csv_yaz(tmp_path / "b.csv", [bakim_satir()])
+    with pytest.raises(VeriHatasi, match="Durus nedeni"):
+        durus_oku(yol)

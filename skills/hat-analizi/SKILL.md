@@ -43,8 +43,8 @@ Ro hedefi **%99** · takt ≈ 0,838 dk/motor · arıza eşiği **5 dk** · anoma
 ## sonuc.json anahtarları
 
 `ozet` (ortalama_ro, hedefi_tutan_oran, calisilan_vardiya, gercek_kayip_motor, ariza_sayisi, mttr_dk, mtbf_dk,
-mikro_sayisi, toplam_kayip_dk, anomali_sayisi) · `vardiya_ro` · `pareto_posta` · `pareto_neden` (ilk 10) ·
-`kirilim_posta` (ilk 15) · `kirilim_vardiya` · `kirilim_ekip` · `mikro` (ilk 10 posta–neden) · `bakim_eslesme` ·
+mikro_sayisi, toplam_kayip_dk, anomali_sayisi) · `vardiya_ro` (vardiya başına) · `gun_ro` (gün başına) · `pareto_posta` · `pareto_neden` (ilk 10) ·
+`kirilim_posta` (ilk 15) · `kirilim_vardiya` (Sabah/Akşam; `ortalama_ro` dahil) · `kirilim_ekip` · `mikro` (ilk 10 posta–neden) · `bakim_eslesme` ·
 `kayitsiz_kronikler` · `koruyucu_bakim` · `anomaliler` · `calisilmayan_vardiyalar` · `uyarilar` · `donem` · `ayarlar`.
 
 ## aksiyonlar.json şeması

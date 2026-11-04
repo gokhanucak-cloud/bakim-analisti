@@ -180,7 +180,11 @@ def _ro_trendi(s: dict) -> str:
     t = tablo(["Tarih", "Vardiya", "Üretim", "Ro"],
               [[e(r["tarih"]), e(r["vardiya"]), sayi(r["uretim"]), yuzde(r["ro"])] for r in alti],
               {2, 3}, "Tüm vardiyalar hedefte.")
-    return f'{grafik}{lejant}<h3>Hedefin en çok altında kalan vardiyalar</h3>{t}'
+    gun = tablo(["Tarih", "Üretim", "Ro"],
+                [[e(r["tarih"]), sayi(r["uretim"]), yuzde(r["ro"])] for r in s.get("gun_ro", [])],
+                {1, 2})
+    return (f'{grafik}{lejant}<h3>Hedefin en çok altında kalan vardiyalar</h3>{t}'
+            f'<details><summary>Gün bazında Ro</summary>{gun}</details>')
 
 
 def _tur(t: str) -> str:
@@ -219,8 +223,9 @@ def _mttr_mtbf(s: dict) -> str:
     n = {1, 2, 3, 4, 5}
     t1 = tablo(["Posta"] + bas[1:], [_kpi_satir(f"<b>{e(r['posta'])}</b>", r)
                                      for r in s["kirilim_posta"]], n)
-    t2 = tablo(["Vardiya"] + bas[1:], [_kpi_satir(e(r["vardiya"]), r)
-                                       for r in s["kirilim_vardiya"]], n)
+    t2 = tablo(["Vardiya", "Ortalama Ro"] + bas[1:],
+               [[_kpi_satir(e(r["vardiya"]), r)[0], yuzde(r.get("ortalama_ro"))]
+                + _kpi_satir("", r)[1:] for r in s["kirilim_vardiya"]], {1, 2, 3, 4, 5, 6})
     t3 = tablo(["Ekip"] + bas[1:], [_kpi_satir(e(r["ekip"]), r)
                                     for r in sorted(s["kirilim_ekip"], key=lambda r: r["ekip"])], n)
     not_ = ('<p class="not">Ekip, duruş kaydındaki ekip numarasıdır. Aynı vardiyada birden fazla '

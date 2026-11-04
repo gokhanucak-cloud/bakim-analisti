@@ -73,3 +73,40 @@ def test_cli_varsayilan_cikti_donem_ayi(girdiler, tmp_path, monkeypatch):
                        capture_output=True, text=True, encoding="utf-8", cwd=tmp_path)
     assert r.returncode == 0, r.stderr
     assert (tmp_path / "bakim-analizleri" / "2026-10" / "sonuc.json").exists()
+
+
+def test_cli_tek_dosya_verilirse_hata(girdiler):
+    k, d, b = girdiler
+    r = calistir("hesapla", "--durus", d, "--cikti", k / "o")
+    assert r.returncode == 2 and "--bakim" in r.stderr
+
+
+def test_cli_kullanilan_dosyalari_yazar(girdiler):
+    k, d, b = girdiler
+    r = calistir("hesapla", "--klasor", k, "--cikti", k / "o")
+    assert d.name in r.stdout and b.name in r.stdout
+
+
+def test_cli_bozuk_aksiyon_json(girdiler, tmp_path):
+    k, d, b = girdiler
+    calistir("hesapla", "--durus", d, "--bakim", b, "--cikti", k / "o")
+    a = tmp_path / "aksiyonlar.json"
+    a.write_text("[{bozuk", "utf-8")
+    r = calistir("rapor", "--sonuc", k / "o" / "sonuc.json", "--aksiyonlar", a, "--cikti", k / "o")
+    assert r.returncode == 2 and "aksiyonlar.json" in r.stderr and "Traceback" not in r.stderr
+
+
+def test_cli_sonuc_yoksa(tmp_path):
+    r = calistir("rapor", "--sonuc", tmp_path / "yok.json", "--cikti", tmp_path)
+    assert r.returncode == 2 and "Traceback" not in r.stderr
+
+
+def test_ro_vardiya_ve_gun(girdiler):
+    k, d, b = girdiler
+    calistir("hesapla", "--durus", d, "--bakim", b, "--cikti", k / "o")
+    s = json.loads((k / "o" / "sonuc.json").read_text("utf-8"))
+    v = {r["vardiya"]: r for r in s["kirilim_vardiya"]}
+    assert v["Sabah"]["ortalama_ro"] == pytest.approx((515 + 520) / 2 / 519)
+    assert v["Aksam"]["ortalama_ro"] == pytest.approx(505 / 519)
+    assert s["gun_ro"] == [{"tarih": "2026-10-05", "uretim": 1020, "ro": pytest.approx(1020 / 1038)},
+                           {"tarih": "2026-10-06", "uretim": 520, "ro": pytest.approx(520 / 519)}]

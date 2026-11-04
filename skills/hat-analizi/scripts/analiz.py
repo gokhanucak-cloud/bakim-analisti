@@ -25,7 +25,10 @@ def _yuzde(x):
 
 
 def hesapla(args) -> int:
-    if args.durus and args.bakim:
+    if bool(args.durus) != bool(args.bakim):
+        raise veri.VeriHatasi("--durus ve --bakim birlikte verilmeli; ikisi de verilmezse dosyalar "
+                              "--klasor içinde aranır.")
+    if args.durus:
         durus_yolu, bakim_yolu = Path(args.durus), Path(args.bakim)
     else:
         durus_yolu, bakim_yolu = veri.dosya_bul(Path(args.klasor or "."))
@@ -39,6 +42,7 @@ def hesapla(args) -> int:
     (cikti / "sonuc.json").write_text(json.dumps(sonuc, ensure_ascii=False, indent=2), "utf-8")
     o = sonuc["ozet"]
     ilk = next((p["posta"] for p in sonuc["pareto_posta"]), "—")
+    print(f"Girdiler: {durus_yolu.name} · {bakim_yolu.name}")
     print(f"Dönem {sonuc['donem']['baslangic'][:10]} – {sonuc['donem']['bitis'][:10]} | "
           f"ortalama Ro {_yuzde(o['ortalama_ro'])} | hedefi tutan vardiya "
           f"{_yuzde(o['hedefi_tutan_oran'])} | en büyük kayıp: {ilk} | "
@@ -46,12 +50,21 @@ def hesapla(args) -> int:
     return 0
 
 
+def _json_oku(yol, ad: str):
+    try:
+        return json.loads(Path(yol).read_text("utf-8"))
+    except FileNotFoundError:
+        raise veri.VeriHatasi(f"{ad} bulunamadı: {yol}") from None
+    except json.JSONDecodeError as e:
+        raise veri.VeriHatasi(f"{ad} geçerli bir JSON değil ({yol}, satır {e.lineno}): {e.msg}") from None
+
+
 def rapor(args) -> int:
     import rapor as rapor_modulu
-    sonuc = json.loads(Path(args.sonuc).read_text("utf-8"))
+    sonuc = _json_oku(args.sonuc, "sonuc.json")
     aksiyonlar = None
     if args.aksiyonlar:
-        aksiyonlar = json.loads(Path(args.aksiyonlar).read_text("utf-8"))
+        aksiyonlar = _json_oku(args.aksiyonlar, "aksiyonlar.json")
         hatalar = rapor_modulu.aksiyon_dogrula(aksiyonlar)
         if hatalar:
             print("Aksiyon listesi geçersiz:\n- " + "\n- ".join(hatalar), file=sys.stderr)
