@@ -69,3 +69,22 @@ def bakim_csv_yaz(yol: Path, satirlar) -> Path:
         for s in satirlar:
             w.writerow([s.get(b, "") for b in BAKIM_BASLIKLARI])
     return yol
+
+
+def durus_df(satirlar):
+    """durus_oku çıktısıyla aynı sütunlara sahip DataFrame.
+
+    Her satır: (zaman 'YYYY-MM-DD HH:MM', sure_dk, posta, neden, vardiya, ekip, sayac)
+    """
+    import pandas as pd
+    kayitlar = []
+    for zaman, sure, posta, neden, vardiya, ekip, sayac in satirlar:
+        bas = pd.Timestamp(zaman)
+        kayitlar.append({
+            "baslangic": bas, "bitis": bas + pd.Timedelta(minutes=sure), "sure_dk": float(sure),
+            "posta": posta, "zon": posta, "modul": "M", "neden": neden, "vardiya": vardiya,
+            "ekip": ekip, "sayac": sayac, "tarih": bas.date(),
+        })
+    df = pd.DataFrame(kayitlar)
+    df["ekip"] = df["ekip"].astype("Int64")
+    return df
