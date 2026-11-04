@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Bakım Analisti hesap motoru.
 
-  analiz.py hesapla [--durus X.xlsx] [--bakim Y.csv] [--klasor K] --cikti DIR
+  analiz.py hesapla [--durus X.xlsx] [--bakim Y.csv] [--klasor K] [--cikti DIR]
   analiz.py rapor --sonuc sonuc.json [--aksiyonlar aksiyonlar.json] --cikti DIR
 """
 import argparse
@@ -34,7 +34,7 @@ def hesapla(args) -> int:
     bakim, u2 = veri.bakim_oku(bakim_yolu)
     sonuc = hesap.analiz_et(durus, bakim, ayar, u1 + u2)
     sonuc["girdiler"] = {"durus": durus_yolu.name, "bakim": bakim_yolu.name}
-    cikti = Path(args.cikti)
+    cikti = Path(args.cikti or Path("bakim-analizleri") / sonuc["donem"]["baslangic"][:7])
     cikti.mkdir(parents=True, exist_ok=True)
     (cikti / "sonuc.json").write_text(json.dumps(sonuc, ensure_ascii=False, indent=2), "utf-8")
     o = sonuc["ozet"]
@@ -70,7 +70,7 @@ def main(argv=None) -> int:
     h.add_argument("--durus")
     h.add_argument("--bakim")
     h.add_argument("--klasor", help="dosyalar verilmezse bu klasörde aranır")
-    h.add_argument("--cikti", required=True)
+    h.add_argument("--cikti", help="varsayılan: bakim-analizleri/<dönemin ayı>")
     r = alt.add_parser("rapor", help="sonuc.json (+ aksiyonlar.json) ile rapor.html üretir")
     r.add_argument("--sonuc", required=True)
     r.add_argument("--aksiyonlar")

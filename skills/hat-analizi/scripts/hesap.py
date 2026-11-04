@@ -164,8 +164,11 @@ def bakim_eslestir(bakim: pd.DataFrame, temiz: pd.DataFrame, ayar: dict,
     return sonuc, uyarilar
 
 
-def kayitsiz_kronikler(pareto_neden: list[dict], bakim: pd.DataFrame) -> list[dict]:
-    kayitli = set(bakim.loc[bakim["ariza_tipi"] != KORUYUCU, "posta"])
+def kayitsiz_kronikler(pareto_neden: list[dict], bakim: pd.DataFrame,
+                       donem: tuple[pd.Timestamp, pd.Timestamp]) -> list[dict]:
+    ariza = bakim[(bakim["ariza_tipi"] != KORUYUCU) & (bakim["baslama"] >= donem[0])
+                  & (bakim["baslama"] <= donem[1])]
+    kayitli = set(ariza["posta"])
     return [r for r in pareto_neden if r["posta"] not in kayitli]
 
 
@@ -213,7 +216,7 @@ def analiz_et(durus: pd.DataFrame, bakim: pd.DataFrame, ayar: dict,
         "kirilim_ekip": kirilim(temiz, vardiyalar, ayar, "ekip"),
         "mikro": mikro_analiz(temiz, n * ayar["net_sure_dk"] / 60),
         "bakim_eslesme": eslesme,
-        "kayitsiz_kronikler": kayitsiz_kronikler(pareto_neden, bakim),
+        "kayitsiz_kronikler": kayitsiz_kronikler(pareto_neden, bakim, donem),
         "koruyucu_bakim": koruyucu_bakim_ozeti(bakim),
         "anomaliler": [{"tarih": str(r.tarih), "vardiya": r.vardiya, "posta": r.posta,
                         "neden": r.neden, "sure_dk": float(r.sure_dk)}

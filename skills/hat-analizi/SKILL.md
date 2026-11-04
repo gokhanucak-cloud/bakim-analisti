@@ -11,7 +11,7 @@ Betik: `scripts/analiz.py` (bu dosyanın klasörüne göre). Python 3.11+, `pand
 ## Komutlar
 
 ```bash
-python3 <skill>/scripts/analiz.py hesapla --durus DURUS.xlsx --bakim DEFTER.csv --cikti bakim-analizleri/YYYY-MM
+python3 <skill>/scripts/analiz.py hesapla --durus DURUS.xlsx --bakim DEFTER.csv   # → bakim-analizleri/<dönem ayı>/
 python3 <skill>/scripts/analiz.py hesapla --klasor <yükleme klasörü> --cikti ...   # dosyaları içerikten bulur
 python3 <skill>/scripts/analiz.py rapor --sonuc .../sonuc.json --aksiyonlar .../aksiyonlar.json --cikti ...
 ```
@@ -38,7 +38,7 @@ Ro hedefi **%99** · takt ≈ 0,838 dk/motor · arıza eşiği **5 dk** · anoma
   kayıplı neden = hedef neden. Önceki 7 gün ile sonraki 7 gün tekrarı:
   Kalıcı (sonra 0) · Kısmi (sonra ≤ önce/2) · Kalıcı değil · Eşleşmedi (pencerede duruş yok) ·
   Takipte (sonraki 7 gün dönem dışında) · Duruş verisi yok (posta duruş dosyasında hiç yok: AGV, BAP, kitting…).
-- **Kayıtsız kronik**: ilk 10 posta–neden çiftinden, dönemde aynı postada hiç arıza iş emri açılmamış olanlar.
+- **Kayıtsız kronik**: ilk 10 posta–neden çiftinden, duruş dosyasının döneminde aynı postada hiç arıza iş emri açılmamış olanlar.
 
 ## sonuc.json anahtarları
 

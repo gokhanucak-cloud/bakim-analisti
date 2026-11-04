@@ -11,9 +11,8 @@ dosyasını bul). Önce `hat-analizi` skill'ini yükle.
 1. **Girdiler.** İki yol verildiyse `--durus` ve `--bakim` olarak kullan. Verilmediyse `--klasor` ile ara: önce
    `~/.claude/uploads/` altındaki en son değişen klasör, bulamazsan çalışma klasörü. Hangi dosyaları kullandığını
    kullanıcıya söyle.
-2. **Hesapla.** `python3 <betik> hesapla ... --cikti bakim-analizleri/<YYYY-MM>` (dönem ayı; bilinmiyorsa önce
-   geçici bir klasöre yaz, `sonuc.json`'daki `donem.baslangic`'tan ayı al). Çıkış kodu 2 ise mesajı aynen aktar
-   ve dur. `pandas`/`openpyxl` eksikse kurulum komutunu öner.
+2. **Hesapla.** `python3 <betik> hesapla ...` (`--cikti` verme: betik `bakim-analizleri/<dönemin ayı>/`
+   klasörünü kendisi seçer ve yolu çıktıda yazar). Çıkış kodu 2 ise mesajı aynen aktar ve dur. `pandas`/`openpyxl` eksikse kurulum komutunu öner.
 3. **Aksiyonlar.** `bakim-analisti` ajanına `sonuc.json` yolunu ver; aynı klasöre `aksiyonlar.json` yazsın.
 4. **Rapor.** `python3 <betik> rapor --sonuc ... --aksiyonlar ... --cikti <aynı klasör>`. Doğrulama hatası
    olursa ajana düzelttir ve tekrar çalıştır.

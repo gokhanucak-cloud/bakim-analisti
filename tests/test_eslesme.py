@@ -99,7 +99,7 @@ def test_cikti_json_uyumlu():
 def test_kayitsiz_kronik():
     p = [{"posta": "OP311", "neden": "YAG ESANJORU NOK"}, {"posta": "OP170", "neden": "röle"}]
     bakim = bakim_df(IE + [("5", "Koruyucu Bakım", "OP311", "2026-10-10 09:00", "2026-10-10 09:10")])
-    k = kayitsiz_kronikler(p, bakim)
+    k = kayitsiz_kronikler(p, bakim, DONEM)
     assert [x["posta"] for x in k] == ["OP311"]
 
 
@@ -113,3 +113,9 @@ def test_duruş_verisi_yok():
     ie = [("7", "AGV", "MM11 AGV", "2026-10-10 09:00", "2026-10-10 09:30")]
     e, _ = bakim_eslestir(bakim_df(ie), _role([3], []), AYAR, DONEM)
     assert e[0]["sinif"] == "Duruş verisi yok"
+
+
+def test_kayitsiz_kronik_donem_disi_is_emri_sayilmaz():
+    p = [{"posta": "OP311", "neden": "YAG ESANJORU NOK"}]
+    bakim = bakim_df([("8", "Mekanik", "OP311", "2026-09-28 09:00", "2026-09-28 09:30")])
+    assert [x["posta"] for x in kayitsiz_kronikler(p, bakim, DONEM)] == ["OP311"]

@@ -65,3 +65,11 @@ def test_json_ad_icermez(girdiler):
     k, d, b = girdiler
     calistir("hesapla", "--durus", d, "--bakim", b, "--cikti", k / "o")
     assert "ÇEŞMECİ" not in (k / "o" / "sonuc.json").read_text("utf-8")
+
+
+def test_cli_varsayilan_cikti_donem_ayi(girdiler, tmp_path, monkeypatch):
+    k, d, b = girdiler
+    r = subprocess.run([sys.executable, ANALIZ, "hesapla", "--durus", str(d), "--bakim", str(b)],
+                       capture_output=True, text=True, encoding="utf-8", cwd=tmp_path)
+    assert r.returncode == 0, r.stderr
+    assert (tmp_path / "bakim-analizleri" / "2026-10" / "sonuc.json").exists()
