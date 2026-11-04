@@ -47,7 +47,6 @@ def kpi(temiz: pd.DataFrame, vardiya_sayisi: int, ayar: dict) -> dict:
         "mikro_sayisi": int(len(mikro)),
         "mikro_dk": float(mikro.sum()),
         "toplam_kayip_dk": toplam,
-        "kayip_motor": toplam / ayar["takt_dk"],
     }
 
 
@@ -77,6 +76,7 @@ def ro_ozeti(vardiyalar: pd.DataFrame, ayar: dict) -> dict:
         "ortalama_ro": float(c["ro"].mean()) if len(c) else None,
         "hedefi_tutan_oran": float((c["ro"] >= ayar["ro_hedefi"]).mean()) if len(c) else None,
         "calisilan_vardiya": int(len(c)),
+        "gercek_kayip_motor": int((ayar["vardiya_hedefi"] - c["uretim"]).clip(lower=0).sum()),
         "calisilmayan": [{"tarih": str(r.tarih), "vardiya": r.vardiya}
                          for r in vardiyalar[~vardiyalar["calisildi"]].itertuples()],
         "vardiya_ro": [{"tarih": str(r.tarih), "vardiya": r.vardiya, "ekip": _python(r.ekip),
@@ -84,8 +84,9 @@ def ro_ozeti(vardiyalar: pd.DataFrame, ayar: dict) -> dict:
     }
 
 
-def pareto(temiz: pd.DataFrame, anahtar: list[str], ayar: dict,
-           ilk: int | None = None) -> list[dict]:
+def pareto(temiz: pd.DataFrame, anahtar: list[str], ayar: dict, ilk: int | None = None,
+           toplam_kayip_motor: float | None = None) -> list[dict]:
+    """kayip_motor: gerçek motor açığının bu satırın kayıp dakikası payı kadarı."""
     toplam = float(temiz["sure_dk"].sum())
     g = temiz.assign(
         ariza_dk=temiz["sure_dk"].where(temiz["tur"] == "ariza", 0.0),
@@ -103,7 +104,8 @@ def pareto(temiz: pd.DataFrame, anahtar: list[str], ayar: dict,
             **{k: _python(r[k]) for k in anahtar},
             "toplam_kayip_dk": float(r["toplam_kayip_dk"]), "adet": int(r["adet"]),
             "ariza_dk": float(r["ariza_dk"]), "mikro_dk": float(r["mikro_dk"]),
-            "kayip_motor": float(r["toplam_kayip_dk"]) / ayar["takt_dk"],
+            "kayip_motor": (toplam_kayip_motor * yuzde / 100
+                            if toplam_kayip_motor is not None else None),
             "yuzde": yuzde, "kumulatif_yuzde": kumulatif,
             "oncelik": bool(onceki < kesim - 1e-9),
             "baskin_tur": "ariza" if r["ariza_dk"] > r["mikro_dk"] else "mikro",
@@ -133,6 +135,7 @@ def bakim_eslestir(bakim: pd.DataFrame, temiz: pd.DataFrame, ayar: dict,
                         f"eşleştirmeye alınmadı.")
     gun = pd.Timedelta(days=ayar["kalicilik_gun"])
     pay = pd.Timedelta(hours=ayar["eslesme_oncesi_saat"])
+    duruslu_postalar = set(temiz["posta"])
     sonuc = []
     for ie in icinde.sort_values("baslama").itertuples():
         posta = temiz[temiz["posta"] == ie.posta]
@@ -143,7 +146,9 @@ def bakim_eslestir(bakim: pd.DataFrame, temiz: pd.DataFrame, ayar: dict,
             "yapilan_mudahale": ie.yapilan_mudahale, "baslama": ie.baslama.isoformat(),
             "hedef_neden": None, "once": 0, "sonra": None, "sinif": "Eşleşmedi",
         }
-        if len(pencere):
+        if ie.posta not in duruslu_postalar:
+            kayit["sinif"] = "Duruş verisi yok"
+        elif len(pencere):
             hedef = pencere.groupby("neden")["sure_dk"].sum().idxmax()
             ayni = posta[posta["neden"] == hedef]["baslangic"]
             once = int(((ayni >= ie.baslama - gun) & (ayni < ie.baslama)).sum())
@@ -167,3 +172,52 @@ def kayitsiz_kronikler(pareto_neden: list[dict], bakim: pd.DataFrame) -> list[di
 def koruyucu_bakim_ozeti(bakim: pd.DataFrame) -> dict:
     kb = bakim[bakim["ariza_tipi"] == KORUYUCU]
     return {"adet": int(len(kb)), "posta_sayisi": int(kb["posta"].nunique())}
+
+
+def analiz_et(durus: pd.DataFrame, bakim: pd.DataFrame, ayar: dict,
+              uyarilar: list[str]) -> dict:
+    uyarilar = list(uyarilar)
+    vardiyalar = vardiya_ozeti(durus, ayar)
+    temiz, anomaliler = ayikla(durus, vardiyalar, ayar)
+    ro = ro_ozeti(vardiyalar, ayar)
+    n = ro["calisilan_vardiya"]
+    donem = (durus["baslangic"].min(), durus["baslangic"].max())
+    if len(bakim) and (bakim["baslama"].max() < donem[0] or bakim["baslama"].min() > donem[1]):
+        uyarilar.append("Bakım defterinin tarihleri duruş dosyasının dönemiyle örtüşmüyor.")
+    motor = ro["gercek_kayip_motor"]
+    pareto_neden = pareto(temiz, ["posta", "neden"], ayar, ilk=10, toplam_kayip_motor=motor)
+    eslesme, eslesme_uyari = bakim_eslestir(bakim, temiz, ayar, donem)
+    uyarilar += eslesme_uyari
+    eslesmeyen = sorted(set(bakim.loc[bakim["ariza_tipi"] != KORUYUCU, "posta"])
+                        - set(durus["posta"]))
+    if eslesmeyen:
+        uyarilar.append("Bakım defterinde olup duruş dosyasında karşılığı olmayan postalar: "
+                        + ", ".join(map(str, eslesmeyen)))
+    ayar_ciktisi = {k: v for k, v in ayar.items()}
+    return {
+        "surum": 1,
+        "donem": {"baslangic": donem[0].isoformat(), "bitis": donem[1].isoformat()},
+        "ayarlar": ayar_ciktisi,
+        "ozet": {
+            "ham_satir": int(len(durus)),
+            "ortalama_ro": ro["ortalama_ro"], "hedefi_tutan_oran": ro["hedefi_tutan_oran"],
+            "calisilan_vardiya": n, "anomali_sayisi": int(len(anomaliler)),
+            "gercek_kayip_motor": motor,
+            **kpi(temiz, n, ayar),
+        },
+        "vardiya_ro": ro["vardiya_ro"],
+        "pareto_posta": pareto(temiz, ["posta"], ayar, toplam_kayip_motor=motor),
+        "pareto_neden": pareto_neden,
+        "kirilim_posta": kirilim(temiz, vardiyalar, ayar, "posta")[:15],
+        "kirilim_vardiya": kirilim(temiz, vardiyalar, ayar, "vardiya"),
+        "kirilim_ekip": kirilim(temiz, vardiyalar, ayar, "ekip"),
+        "mikro": mikro_analiz(temiz, n * ayar["net_sure_dk"] / 60),
+        "bakim_eslesme": eslesme,
+        "kayitsiz_kronikler": kayitsiz_kronikler(pareto_neden, bakim),
+        "koruyucu_bakim": koruyucu_bakim_ozeti(bakim),
+        "anomaliler": [{"tarih": str(r.tarih), "vardiya": r.vardiya, "posta": r.posta,
+                        "neden": r.neden, "sure_dk": float(r.sure_dk)}
+                       for r in anomaliler.itertuples()],
+        "calisilmayan_vardiyalar": ro["calisilmayan"],
+        "uyarilar": uyarilar,
+    }

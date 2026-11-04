@@ -107,3 +107,9 @@ def test_koruyucu_bakim_ozeti():
     bakim = bakim_df(IE + [("5", "Koruyucu Bakım", "OP311", "2026-10-10 09:00", "2026-10-10 09:10"),
                            ("6", "Koruyucu Bakım", "OP311", "2026-10-11 09:00", "2026-10-11 09:10")])
     assert koruyucu_bakim_ozeti(bakim) == {"adet": 2, "posta_sayisi": 1}
+
+
+def test_duruş_verisi_yok():
+    ie = [("7", "AGV", "MM11 AGV", "2026-10-10 09:00", "2026-10-10 09:30")]
+    e, _ = bakim_eslestir(bakim_df(ie), _role([3], []), AYAR, DONEM)
+    assert e[0]["sinif"] == "Duruş verisi yok"

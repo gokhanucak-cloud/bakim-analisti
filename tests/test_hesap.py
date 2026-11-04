@@ -63,7 +63,7 @@ def test_kpi_formulleri():
     assert k["mtbf_dk"] == pytest.approx((2 * 435 - 30) / 2)
     assert k["mikro_sayisi"] == 2 and k["mikro_dk"] == 3
     assert k["toplam_kayip_dk"] == 33
-    assert k["kayip_motor"] == pytest.approx(33 / (435 / 519))
+    assert "kayip_motor" not in k  # motor kaybı gerçek açıktan dağıtılır (pareto)
 
 
 def test_ariza_yoksa_none():
@@ -123,12 +123,13 @@ def _kayiplar(dagilim):
 
 
 def test_pareto_kesim():
-    p = pareto(_kayiplar({"A": [50], "B": [30], "C": [15], "D": [5]}), ["posta"], AYAR)
+    p = pareto(_kayiplar({"A": [50], "B": [30], "C": [15], "D": [5]}), ["posta"], AYAR,
+               toplam_kayip_motor=100)
     assert [r["posta"] for r in p] == ["A", "B", "C", "D"]
     assert [r["posta"] for r in p if r["oncelik"]] == ["A", "B"]
     assert p[1]["kumulatif_yuzde"] == pytest.approx(80.0)
     assert p[0]["yuzde"] == pytest.approx(50.0)
-    assert p[0]["kayip_motor"] == pytest.approx(50 / AYAR["takt_dk"])
+    assert p[0]["kayip_motor"] == pytest.approx(50.0)  # açığın %50 payı
 
 
 def test_pareto_ilk_eleman_her_zaman_oncelik():
@@ -152,3 +153,14 @@ def test_mikro_saatte_adet():
     m = mikro_analiz(temiz, 14.5)
     assert len(m) == 1 and m[0]["posta"] == "A" and m[0]["adet"] == 29
     assert m[0]["saatte_adet"] == pytest.approx(2.0)
+
+
+def test_pareto_motor_verilmezse_none():
+    p = pareto(_kayiplar({"A": [5]}), ["posta"], AYAR)
+    assert p[0]["kayip_motor"] is None
+
+
+def test_ro_ozeti_gercek_acik():
+    df = durus_df([("2026-10-05 08:00", 1, "OP1", "x", "Sabah", 1, 500),   # 19 eksik
+                   ("2026-10-05 16:00", 1, "OP1", "x", "Aksam", 2, 525)])  # hedef üstü: 0
+    assert ro_ozeti(vardiya_ozeti(df, AYAR), AYAR)["gercek_kayip_motor"] == 19
