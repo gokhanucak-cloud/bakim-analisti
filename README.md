@@ -50,7 +50,7 @@ claude --plugin-dir /yol/bakim-analisti
 1. İki dosyayı Claude Code oturumuna yükleyin (ya da çalışma klasörüne koyun).
 2. `/hat-analizi` yazın. Dosya yollarını da verebilirsiniz: `/hat-analizi duruş.xlsx defter.csv`.
 3. Rapor `bakim-analizleri/<YYYY-MM>/rapor.html` olarak üretilir. Ardından sorularınızla devam edin, örneğin:
-   "OP311'deki yağ eşanjörü uyarısı için 5 Neden yap".
+   "OP250'deki Tag Reading Fault için 5 Neden yap".
 
 Komut satırından doğrudan da çalıştırılabilir:
 
@@ -62,8 +62,9 @@ python3 skills/hat-analizi/scripts/analiz.py rapor --sonuc cikti/sonuc.json --ci
 ## Ayarlar
 
 Vardiya saatleri, molalar (30 + 15 dk → net 435 dk), vardiya hedefi (519), Ro hedefi (%99), arıza eşiği (5 dk),
-anomali oranı, eşleşme ve kalıcılık pencereleri ile Pareto kesimi `skills/hat-analizi/ayarlar.json`
-dosyasındadır.
+anomali oranı, eşleşme ve kalıcılık pencereleri, Pareto kesimi ve **kapsam dışı postalar**
+(`kapsam_disi_postalar`, şu an OP311 ve OP312) `skills/hat-analizi/ayarlar.json` dosyasındadır. Kapsam dışı
+postalar duruş ve bakım analizlerine alınmaz; Ro ve motor açığı hattın tamamından hesaplanır.
 
 ## Gizlilik
 

@@ -33,9 +33,10 @@ def test_5_ekim_sabah(sonuc):
     assert r["uretim"] == 521
 
 
-def test_op311_en_sik(sonuc):
-    en = max(sonuc["kirilim_posta"], key=lambda r: r["ariza_sayisi"] + r["mikro_sayisi"])
-    assert en["posta"] == "OP311"
+def test_kapsam_disi_postalar_yok(sonuc):
+    postalar = {r["posta"] for r in sonuc["pareto_posta"]} | {r["posta"] for r in sonuc["bakim_eslesme"]}
+    assert not postalar & {"OP311", "OP312"}
+    assert sonuc["ozet"]["kapsam_disi_satir"] == 5315  # OP311 4700 + OP312 615
 
 
 def test_anomaliler(sonuc):

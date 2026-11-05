@@ -162,7 +162,12 @@ def _ozet(s: dict) -> str:
         _kutu("Ayıklanan anomali", sayi(o["anomali_sayisi"]),
               f"{len(s['calisilmayan_vardiyalar'])} çalışılmayan vardiya"),
     ])
-    return f'<div class="kutular">{kutular}</div>'
+    kd = o.get("kapsam_disi_postalar") or []
+    not_ = (f'<p class="not">Kapsam dışı postalar: {e(", ".join(kd))} '
+            f'({sayi(o.get("kapsam_disi_satir"))} duruş satırı). Bu postalar MTTR/MTBF, Pareto, '
+            f'mikro duruş ve bakım eşleşmesine alınmadı; Ro ve motor açığı hattın tamamından '
+            f'hesaplanır.</p>') if kd else ""
+    return f'<div class="kutular">{kutular}</div>{not_}'
 
 
 def _ro_trendi(s: dict) -> str:

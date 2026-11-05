@@ -152,3 +152,59 @@ def test_ro_ozeti_gercek_acik():
     df = durus_df([("2026-10-05 08:00", 1, "OP1", "x", "Sabah", 1, 500),   # 19 eksik
                    ("2026-10-05 16:00", 1, "OP1", "x", "Aksam", 2, 525)])  # hedef üstü: 0
     assert ro_ozeti(vardiya_ozeti(df, AYAR), AYAR)["gercek_kayip_motor"] == 19
+
+
+# --- Kapsam dışı postalar ---
+from hesap import analiz_et  # noqa: E402
+
+
+def test_ayarlarda_varsayilan_kapsam_disi():
+    assert AYAR["kapsam_disi_postalar"] == ["OP311", "OP312"]
+
+
+def _kapsam_verisi():
+    import pandas as pd
+    df = durus_df([("2026-10-05 08:00", 10, "OP311", "yag", "Sabah", 1, 300),
+                   ("2026-10-05 09:00", 1, "OP312", "rfid", "Sabah", 1, 515),   # sayaç burada
+                   ("2026-10-05 10:00", 6, "OP170", "röle", "Sabah", 1, 400),
+                   ("2026-10-05 11:00", 400, "OP311", "hava", "Sabah", 1, 410)])  # anomali
+    bakim = pd.DataFrame([{
+        "is_emri": ie, "ariza_tipi": "Mekanik", "posta": p, "ariza_tanimi": "t",
+        "ariza_nedeni": "n", "yapilan_mudahale": "m",
+        "baslama": pd.Timestamp("2026-10-05 09:30"), "bitis": pd.Timestamp("2026-10-05 10:30"),
+        "mudahale_dk": 30.0, "durus_dk": 0.0, "kisi_sayisi": 1} for ie, p in [("1", "OP311"), ("2", "OP170")]])
+    return df, bakim
+
+
+def test_kapsam_disi_postalar_analizde_yok():
+    df, bakim = _kapsam_verisi()
+    s = analiz_et(df, bakim, AYAR, [])
+    postalar = {r["posta"] for r in s["pareto_posta"]} | {r["posta"] for r in s["kirilim_posta"]}
+    postalar |= {r["posta"] for r in s["mikro"]} | {r["posta"] for r in s["anomaliler"]}
+    postalar |= {r["posta"] for r in s["bakim_eslesme"]}
+    assert postalar == {"OP170"}
+    assert s["ozet"]["ariza_sayisi"] == 1 and s["ozet"]["toplam_kayip_dk"] == 6
+
+
+def test_kapsam_disi_uretimi_etkilemez():
+    df, bakim = _kapsam_verisi()
+    s = analiz_et(df, bakim, AYAR, [])
+    assert s["vardiya_ro"][0]["uretim"] == 515  # sayaç kapsam dışı postanın satırından
+    assert s["ozet"]["kapsam_disi_postalar"] == ["OP311", "OP312"]
+    assert s["ozet"]["kapsam_disi_satir"] == 3
+    assert any("OP311, OP312" in u for u in s["uyarilar"])
+
+
+def test_kapsam_disi_bos_liste():
+    df, bakim = _kapsam_verisi()
+    s = analiz_et(df, bakim, {**AYAR, "kapsam_disi_postalar": []}, [])
+    assert "OP311" in {r["posta"] for r in s["pareto_posta"]}
+
+
+def test_kirilim_vardiya_durussuz_vardiyayi_da_gosterir():
+    df = durus_df([("2026-10-05 08:00", 10, "OP1", "a", "Sabah", 1, 510),
+                   ("2026-10-05 16:00", 1, "OP311", "x", "Aksam", 1, 505)])
+    _, bakim = _kapsam_verisi()
+    s = analiz_et(df, bakim, AYAR, [])
+    v = {r["vardiya"]: r for r in s["kirilim_vardiya"]}
+    assert v["Aksam"]["ortalama_ro"] == pytest.approx(505 / 519) and v["Aksam"]["ariza_sayisi"] == 0

@@ -88,3 +88,7 @@ def test_cli_rapor_gecersiz_aksiyon(girdiler, tmp_path):  # noqa: F811
 
 def test_ekip_bolumu_yok(ornek_sonuc):
     assert "Ekip" not in rapor_olustur(ornek_sonuc, None)
+
+
+def test_kapsam_disi_raporda_belirtilir(ornek_sonuc):
+    assert "Kapsam dışı postalar: OP311, OP312" in rapor_olustur(ornek_sonuc, None)

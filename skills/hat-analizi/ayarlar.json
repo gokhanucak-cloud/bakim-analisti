@@ -1,6 +1,18 @@
 {
-  "vardiyalar": {"Sabah": ["07:30", "15:30"], "Aksam": ["15:30", "23:30"]},
-  "molalar_dk": {"yemek": 30, "cay": 15},
+  "vardiyalar": {
+    "Sabah": [
+      "07:30",
+      "15:30"
+    ],
+    "Aksam": [
+      "15:30",
+      "23:30"
+    ]
+  },
+  "molalar_dk": {
+    "yemek": 30,
+    "cay": 15
+  },
   "net_sure_dk": 435,
   "vardiya_hedefi": 519,
   "ro_hedefi": 0.99,
@@ -8,5 +20,9 @@
   "anomali_orani": 0.8,
   "eslesme_oncesi_saat": 2,
   "kalicilik_gun": 7,
-  "pareto_kesim": 0.8
+  "pareto_kesim": 0.8,
+  "kapsam_disi_postalar": [
+    "OP311",
+    "OP312"
+  ]
 }

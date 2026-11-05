@@ -20,6 +20,8 @@ farklıysa oradakini esas al. Hesap kuralları `hat-analizi` skill'indedir (SKIL
 2. **Uydurma.** Veride olmayan bir makine detayı, parça adı ya da neden varsayıyorsan "varsayım:" diye yaz.
 3. **Kanıt.** Her öneri posta, neden, adet ve dakika ile desteklenir.
 4. Çalışan adı yazma.
+5. **Kapsam dışı postalar** (`ozet.kapsam_disi_postalar`, şu an OP311 ve OP312) için analiz, öneri ya da aksiyon
+   üretme; aksiyon listesine alma. Sorulursa kapsam dışı olduklarını belirt.
 
 ## Aksiyon listesi (`aksiyonlar.json`)
 
@@ -39,6 +41,6 @@ farklıysa oradakini esas al. Hesap kuralları `hat-analizi` skill'indedir (SKIL
 
 ## Sohbet
 
-Kullanıcı sorduğunda (ör. "OP311'de neden bu kadar duruş var?", "Akşam vardiyasında MTTR neden yüksek?",
+Kullanıcı sorduğunda (ör. "OP250'de neden bu kadar duruş var?", "Akşam vardiyasında MTTR neden yüksek?",
 "Bu arıza için 5 Neden yap") önce `sonuc.json`'a, gerekirse ham veriye bak; yanıtı rakamla başlat, sonra yorum
 ve somut adım ver. 5 Neden/Ishikawa yaparken veriden gelen basamakları varsayımlardan ayır.

@@ -54,7 +54,12 @@ def kirilim(temiz: pd.DataFrame, vardiyalar: pd.DataFrame, ayar: dict,
             alan: Literal["posta", "vardiya"]) -> list[dict]:
     calisilan = vardiyalar[vardiyalar["calisildi"]]
     sonuc = []
-    for deger, grup in temiz.dropna(subset=[alan]).groupby(alan):
+    if alan == "vardiya":  # duruşu olmayan çalışılan vardiyalar da listelenir
+        degerler = sorted(set(calisilan["vardiya"]), key=lambda v: VARDIYA_SIRASI.get(v, 9))
+    else:
+        degerler = sorted(set(temiz[alan].dropna()))
+    for deger in degerler:
+        grup = temiz[temiz[alan] == deger]
         if alan == "vardiya":
             n = int((calisilan["vardiya"] == deger).sum())
         else:  # posta her çalışılan vardiyada bulunabilir
@@ -180,13 +185,21 @@ def koruyucu_bakim_ozeti(bakim: pd.DataFrame) -> dict:
 def analiz_et(durus: pd.DataFrame, bakim: pd.DataFrame, ayar: dict,
               uyarilar: list[str]) -> dict:
     uyarilar = list(uyarilar)
+    # Üretim sayacı tüm satırlardan okunur; kapsam dışı postalar yalnızca duruş/bakım analizinden çıkar
     vardiyalar = vardiya_ozeti(durus, ayar)
+    kapsam_disi = list(ayar.get("kapsam_disi_postalar", []))
+    disarida = durus["posta"].isin(kapsam_disi)
+    if kapsam_disi:
+        uyarilar.append(f"Kapsam dışı postalar: {', '.join(kapsam_disi)} — {int(disarida.sum())} "
+                        f"duruş satırı ve bu postaların iş emirleri analize alınmadı.")
+    durus_tum, durus = durus, durus[~disarida]
+    bakim = bakim[~bakim["posta"].isin(kapsam_disi)]
     temiz, anomaliler = ayikla(durus, vardiyalar, ayar)
     ro = ro_ozeti(vardiyalar, ayar)
     n = ro["calisilan_vardiya"]
     # Dönem: ilk duruş gününün başından son duruş gününün sonuna
-    donem = (durus["baslangic"].min().normalize(),
-             durus["baslangic"].max().normalize() + pd.Timedelta(days=1) - pd.Timedelta(seconds=1))
+    donem = (durus_tum["baslangic"].min().normalize(),
+             durus_tum["baslangic"].max().normalize() + pd.Timedelta(days=1) - pd.Timedelta(seconds=1))
     if len(bakim) and (bakim["baslama"].max() < donem[0] or bakim["baslama"].min() > donem[1]):
         uyarilar.append("Bakım defterinin tarihleri duruş dosyasının dönemiyle örtüşmüyor.")
     motor = ro["gercek_kayip_motor"]
@@ -204,7 +217,9 @@ def analiz_et(durus: pd.DataFrame, bakim: pd.DataFrame, ayar: dict,
         "donem": {"baslangic": donem[0].isoformat(), "bitis": donem[1].isoformat()},
         "ayarlar": ayar_ciktisi,
         "ozet": {
-            "ham_satir": int(len(durus)),
+            "ham_satir": int(len(durus_tum)),
+            "kapsam_disi_postalar": kapsam_disi,
+            "kapsam_disi_satir": int(disarida.sum()),
             "ortalama_ro": ro["ortalama_ro"], "hedefi_tutan_oran": ro["hedefi_tutan_oran"],
             "calisilan_vardiya": n, "anomali_sayisi": int(len(anomaliler)),
             "gercek_kayip_motor": motor,

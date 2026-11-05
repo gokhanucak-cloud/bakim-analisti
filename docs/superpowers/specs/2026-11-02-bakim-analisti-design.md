@@ -176,6 +176,8 @@ Tek dosyadan oluşur. Dış kaynak (CDN) kullanmaz, grafikler satır içi SVG'di
 
 **Karar (2026-11-05):** Duruş dosyasındaki "Ekip" sütunu kullanılmaz. Gerçek veride her vardiyada üç ekip numarası birlikte görülüyor ve anlamı belirsiz.
 
+**Karar (2026-11-05):** OP311 ve OP312 postaları kapsam dışıdır (`ayarlar.json` → `kapsam_disi_postalar`). Duruşları ve iş emirleri duruş/bakım analizlerine alınmaz; Ro ve motor açığı hattın tamamından hesaplanır.
+
 ## 10. Kapsam dışı (şimdilik)
 - Dosyaların otomatik çekilmesi (uygulama API'si, paylaşılan klasör)
 - Canlı panel (mod)
