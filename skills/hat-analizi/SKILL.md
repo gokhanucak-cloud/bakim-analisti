@@ -31,7 +31,7 @@ Ro hedefi **%99** · takt ≈ 0,838 dk/motor · arıza eşiği **5 dk** · anoma
 - Üretim varken 348 dk'yı aşan duruş **veri anomalisi** (sıkışmış alarm / bypass): MTTR/MTBF/Pareto dışı, ayrı listelenir.
 - **Arıza** ≥ 5 dk, **mikro duruş** < 5 dk. MTTR = Σ arıza süresi ÷ arıza sayısı;
   MTBF = (çalışılan vardiya × 435 − Σ arıza süresi) ÷ arıza sayısı.
-- **Ekip**: duruş kaydındaki ekip numarası; aynı vardiyada birden çok ekip görülür. Ekip MTBF paydası tüm çalışılan vardiyalardır.
+- Duruş dosyasındaki **Ekip** sütunu kullanılmaz (kullanıcı kararı); ekip bazında analiz yapma.
 - **Pareto**: kaybın %80'ine kadar olan postalar müdahale önceliği. `baskin_tur` = arıza mı mikro mu ağırlıklı.
 - **Motor açığı** = Σ max(0, 519 − üretim). Posta/neden `kayip_motor` = açığın kayıp dakikası payı (tahmin).
 - **Bakım eşleşmesi** (koruyucu bakım hariç): aynı postada [başlama − 2 saat, bitiş] içindeki duruşlardan en çok
@@ -44,7 +44,7 @@ Ro hedefi **%99** · takt ≈ 0,838 dk/motor · arıza eşiği **5 dk** · anoma
 
 `ozet` (ortalama_ro, hedefi_tutan_oran, calisilan_vardiya, gercek_kayip_motor, ariza_sayisi, mttr_dk, mtbf_dk,
 mikro_sayisi, toplam_kayip_dk, anomali_sayisi) · `vardiya_ro` (vardiya başına) · `gun_ro` (gün başına) · `pareto_posta` · `pareto_neden` (ilk 10) ·
-`kirilim_posta` (ilk 15) · `kirilim_vardiya` (Sabah/Akşam; `ortalama_ro` dahil) · `kirilim_ekip` · `mikro` (ilk 10 posta–neden) · `bakim_eslesme` ·
+`kirilim_posta` (ilk 15) · `kirilim_vardiya` (Sabah/Akşam; `ortalama_ro` dahil) · `mikro` (ilk 10 posta–neden) · `bakim_eslesme` ·
 `kayitsiz_kronikler` · `koruyucu_bakim` · `anomaliler` · `calisilmayan_vardiyalar` · `uyarilar` · `donem` · `ayarlar`.
 
 ## aksiyonlar.json şeması
@@ -73,6 +73,6 @@ print(df[df.posta == 'OP311'].groupby('neden').sure_dk.agg(['count', 'sum']).sor
 "
 ```
 
-Sütunlar: `baslangic, bitis, sure_dk, posta, zon, modul, neden, vardiya, ekip, sayac, tarih`.
+Sütunlar: `baslangic, bitis, sure_dk, posta, zon, modul, neden, vardiya, sayac, tarih`.
 Bakım defteri için `bakim_oku`: `is_emri, ariza_tipi, posta, ariza_tanimi, ariza_nedeni, yapilan_mudahale,
 baslama, bitis, mudahale_dk, durus_dk, kisi_sayisi`. Çalışan adları bilerek okunmaz; rapora ya da sohbete ad yazma.

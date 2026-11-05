@@ -20,7 +20,7 @@ def test_vardiya_ozeti_ro():
     v = vardiya_ozeti(df, AYAR)
     assert len(v) == 1
     r = v.iloc[0]
-    assert r.uretim == 514 and r.ekip == 1 and bool(r.calisildi)
+    assert r.uretim == 514 and bool(r.calisildi) and "ekip" not in v.columns
     assert r.ro == pytest.approx(514 / 519)
 
 
@@ -79,18 +79,6 @@ def test_kirilim_posta_siralama():
     assert p[0]["mtbf_dk"] == pytest.approx((2 * 435 - 20) / 1)  # posta: tüm çalışılan vardiyalar
 
 
-def test_kirilim_ekip_vardiya_sayisi():
-    _, v, temiz, _ = _temiz([
-        ("2026-10-05 08:00", 10, "OP1", "a", "Sabah", 1, 510),
-        ("2026-10-05 16:00", 10, "OP1", "a", "Aksam", 2, 510),
-        ("2026-10-06 08:00", 1, "OP1", "m", "Sabah", 2, 510)])
-    # Ekip her vardiyada görülebildiği için payda tüm çalışılan vardiyalardır (3)
-    e = {r["ekip"]: r for r in kirilim(temiz, v, AYAR, "ekip")}
-    assert e[2]["mtbf_dk"] == pytest.approx((3 * 435 - 10) / 1)
-    assert e[2]["mikro_sayisi"] == 1
-    assert e[1]["mtbf_dk"] == pytest.approx((3 * 435 - 10) / 1)
-
-
 def test_kirilim_vardiya():
     _, v, temiz, _ = _iki_vardiya()
     s = {r["vardiya"]: r for r in kirilim(temiz, v, AYAR, "vardiya")}
@@ -105,7 +93,7 @@ def test_ro_ozeti_hedef_orani():
     assert r["hedefi_tutan_oran"] == 0.5 and r["calisilan_vardiya"] == 2
     assert r["ortalama_ro"] == pytest.approx((517 + 509) / 2 / 519)
     assert r["calisilmayan"] == [{"tarih": "2026-10-17", "vardiya": "Sabah"}]
-    assert r["vardiya_ro"][0] == {"tarih": "2026-10-05", "vardiya": "Sabah", "ekip": 1,
+    assert r["vardiya_ro"][0] == {"tarih": "2026-10-05", "vardiya": "Sabah",
                                   "uretim": 517, "ro": pytest.approx(517 / 519)}
 
 

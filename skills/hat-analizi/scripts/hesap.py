@@ -9,14 +9,7 @@ VARDIYA_SIRASI = {"Sabah": 0, "Aksam": 1}
 
 
 def vardiya_ozeti(durus: pd.DataFrame, ayar: dict) -> pd.DataFrame:
-    def baskin(s):
-        s = s.dropna()
-        return s.mode().iloc[0] if len(s) else pd.NA
-
-    v = (durus.groupby(["tarih", "vardiya"])
-         .agg(uretim=("sayac", "max"), ekip=("ekip", baskin))
-         .reset_index())
-    v["ekip"] = v["ekip"].astype("Int64")
+    v = durus.groupby(["tarih", "vardiya"]).agg(uretim=("sayac", "max")).reset_index()
     v["uretim"] = v["uretim"].astype(int)
     v["ro"] = v["uretim"] / ayar["vardiya_hedefi"]
     v["calisildi"] = v["uretim"] > 0
@@ -58,13 +51,13 @@ def _python(deger):
 
 
 def kirilim(temiz: pd.DataFrame, vardiyalar: pd.DataFrame, ayar: dict,
-            alan: Literal["posta", "vardiya", "ekip"]) -> list[dict]:
+            alan: Literal["posta", "vardiya"]) -> list[dict]:
     calisilan = vardiyalar[vardiyalar["calisildi"]]
     sonuc = []
     for deger, grup in temiz.dropna(subset=[alan]).groupby(alan):
         if alan == "vardiya":
             n = int((calisilan["vardiya"] == deger).sum())
-        else:  # posta ve ekip her çalışılan vardiyada bulunabilir
+        else:  # posta her çalışılan vardiyada bulunabilir
             n = int(len(calisilan))
         satir = {alan: _python(deger), **kpi(grup, n, ayar)}
         if alan == "vardiya":
@@ -86,7 +79,7 @@ def ro_ozeti(vardiyalar: pd.DataFrame, ayar: dict) -> dict:
         "gun_ro": [{"tarih": str(t), "uretim": int(g["uretim"].sum()),
                     "ro": float(g["uretim"].sum() / (len(g) * ayar["vardiya_hedefi"]))}
                    for t, g in c.groupby("tarih")],
-        "vardiya_ro": [{"tarih": str(r.tarih), "vardiya": r.vardiya, "ekip": _python(r.ekip),
+        "vardiya_ro": [{"tarih": str(r.tarih), "vardiya": r.vardiya,
                         "uretim": int(r.uretim), "ro": float(r.ro)} for r in c.itertuples()],
     }
 
@@ -223,7 +216,6 @@ def analiz_et(durus: pd.DataFrame, bakim: pd.DataFrame, ayar: dict,
         "pareto_neden": pareto_neden,
         "kirilim_posta": kirilim(temiz, vardiyalar, ayar, "posta")[:15],
         "kirilim_vardiya": kirilim(temiz, vardiyalar, ayar, "vardiya"),
-        "kirilim_ekip": kirilim(temiz, vardiyalar, ayar, "ekip"),
         "mikro": mikro_analiz(temiz, n * ayar["net_sure_dk"] / 60),
         "bakim_eslesme": eslesme,
         "kayitsiz_kronikler": kayitsiz_kronikler(pareto_neden, bakim, donem),

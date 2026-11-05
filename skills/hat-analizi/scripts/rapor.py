@@ -226,13 +226,7 @@ def _mttr_mtbf(s: dict) -> str:
     t2 = tablo(["Vardiya", "Ortalama Ro"] + bas[1:],
                [[_kpi_satir(e(r["vardiya"]), r)[0], yuzde(r.get("ortalama_ro"))]
                 + _kpi_satir("", r)[1:] for r in s["kirilim_vardiya"]], {1, 2, 3, 4, 5, 6})
-    t3 = tablo(["Ekip"] + bas[1:], [_kpi_satir(e(r["ekip"]), r)
-                                    for r in sorted(s["kirilim_ekip"], key=lambda r: r["ekip"])], n)
-    not_ = ('<p class="not">Ekip, duruş kaydındaki ekip numarasıdır. Aynı vardiyada birden fazla '
-            'ekip numarası görülebildiği için ekip MTBF\'si tüm çalışılan vardiyalar üzerinden '
-            'hesaplanır.</p>')
-    return (f'<h3>Posta bazında (kayba göre ilk 15)</h3>{t1}<h3>Vardiya bazında</h3>{t2}'
-            f'<h3>Ekip bazında</h3>{t3}{not_}')
+    return f'<h3>Posta bazında (kayba göre ilk 15)</h3>{t1}<h3>Vardiya bazında</h3>{t2}'
 
 
 def _mikro(s: dict) -> str:

@@ -8,7 +8,7 @@ Motor montaj hattı için bir Claude Code eklentisi. İki dosyayı birlikte anal
 Ürettikleri:
 
 - Ro takibi (üretim ÷ 519)
-- Posta, vardiya ve ekip bazında MTTR/MTBF (arıza ≥ 5 dk; mikro duruşlar ayrıca)
+- Posta ve vardiya bazında MTTR/MTBF (arıza ≥ 5 dk; mikro duruşlar ayrıca)
 - Pareto ile darboğaz tespiti
 - "Bakımın müdahalesi kalıcı çözüm oldu mu?" eşleştirmesi
 - Bakım Analisti ajanının hazırladığı öncelikli aksiyon listesi
@@ -16,9 +16,33 @@ Motor montaj hattı için bir Claude Code eklentisi. İki dosyayı birlikte anal
 
 ## Kurulum
 
+Eklenti Python ile hesap yapar. Önce gerekli paketleri kurun:
+
 ```bash
-pip install -r requirements.txt          # pandas, openpyxl
-claude --plugin-dir /yol/bakim-analisti  # geliştirirken eklentiyi yükler
+pip install pandas openpyxl
+```
+
+Claude Code terminal oturumunda, istem satırına:
+
+```
+/plugin install bakim-analisti --marketplace gokhanucak-cloud/bakim-analisti
+```
+
+Ya da kabuktan:
+
+```bash
+claude plugin install bakim-analisti --marketplace gokhanucak-cloud/bakim-analisti
+```
+
+Masaüstü uygulamasında (`/plugin` çalışmıyorsa): istem kutusunun yanındaki **+** → **Plugins** →
+**Add marketplace** ile `gokhanucak-cloud/bakim-analisti` ekleyin, ardından **Add plugin**.
+
+Kurulumda önce `Add marketplace?` sorusu gelir (`y` ile onaylayın), sonra kapsam seçilir (Enter).
+
+Geliştirirken depoyu klonlayıp doğrudan yükleyebilirsiniz:
+
+```bash
+claude --plugin-dir /yol/bakim-analisti
 ```
 
 ## Kullanım

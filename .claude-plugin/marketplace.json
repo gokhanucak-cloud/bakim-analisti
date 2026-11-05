@@ -1,0 +1,16 @@
+{
+  "name": "bakim-analisti",
+  "owner": {
+    "name": "gokhanucak-cloud"
+  },
+  "metadata": {
+    "description": "Motor montaj hattı bakım analizi eklentisi"
+  },
+  "plugins": [
+    {
+      "name": "bakim-analisti",
+      "source": "./",
+      "description": "Motor montaj hattı duruş ve bakım analizleri: Ro, MTTR/MTBF, Pareto, kalıcı çözüm takibi"
+    }
+  ]
+}

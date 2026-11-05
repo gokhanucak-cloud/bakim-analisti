@@ -39,6 +39,6 @@ farklıysa oradakini esas al. Hesap kuralları `hat-analizi` skill'indedir (SKIL
 
 ## Sohbet
 
-Kullanıcı sorduğunda (ör. "OP311'de neden bu kadar duruş var?", "Ekip 2'nin MTTR'si neden yüksek?",
+Kullanıcı sorduğunda (ör. "OP311'de neden bu kadar duruş var?", "Akşam vardiyasında MTTR neden yüksek?",
 "Bu arıza için 5 Neden yap") önce `sonuc.json`'a, gerekirse ham veriye bak; yanıtı rakamla başlat, sonra yorum
 ve somut adım ver. 5 Neden/Ishikawa yaparken veriden gelen basamakları varsayımlardan ayır.

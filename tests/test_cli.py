@@ -37,10 +37,11 @@ def test_cli_hesapla(girdiler):
     assert r.returncode == 0, r.stderr
     s = json.loads((k / "o" / "sonuc.json").read_text("utf-8"))
     assert {"ozet", "vardiya_ro", "pareto_posta", "pareto_neden", "kirilim_posta",
-            "kirilim_vardiya", "kirilim_ekip", "mikro", "bakim_eslesme", "kayitsiz_kronikler",
+            "kirilim_vardiya", "mikro", "bakim_eslesme", "kayitsiz_kronikler",
             "koruyucu_bakim", "anomaliler", "calisilmayan_vardiyalar", "uyarilar",
             "donem", "ayarlar"} <= s.keys()
     assert s["surum"] == 1 and s["ozet"]["ham_satir"] == 5
+    assert "kirilim_ekip" not in s and all("ekip" not in r for r in s["vardiya_ro"])
     assert s["ozet"]["calisilan_vardiya"] == 3 and s["anomaliler"][0]["posta"] == "OP550"
     assert s["bakim_eslesme"][0]["hedef_neden"] == "röle"
     assert s["ozet"]["gercek_kayip_motor"] == 4 + 14  # 519−515, 519−505; 520 hedef üstü

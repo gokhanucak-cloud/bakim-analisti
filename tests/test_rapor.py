@@ -84,3 +84,7 @@ def test_cli_rapor_gecersiz_aksiyon(girdiler, tmp_path):  # noqa: F811
     a.write_text(json.dumps([{**GECERLI, "aksiyon_turu": "dua"}]), "utf-8")
     r = calistir("rapor", "--sonuc", k / "o" / "sonuc.json", "--aksiyonlar", a, "--cikti", k / "o")
     assert r.returncode == 2 and "aksiyon_turu" in r.stderr
+
+
+def test_ekip_bolumu_yok(ornek_sonuc):
+    assert "Ekip" not in rapor_olustur(ornek_sonuc, None)

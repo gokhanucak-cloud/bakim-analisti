@@ -38,7 +38,8 @@ def test_durus_oku_alanlar(tmp_path):
     df, uyarilar = durus_oku(yol)
     assert len(df) == 2
     r = df.iloc[0]
-    assert r.posta == "OP311" and r.vardiya == "Sabah" and r.ekip == 1
+    assert r.posta == "OP311" and r.vardiya == "Sabah"
+    assert "ekip" not in df.columns
     assert r.sure_dk == pytest.approx(0.067) and r.sayac == 100
     assert str(r.tarih) == "2026-10-05"
     assert df.iloc[1].posta == "Konv_Z1"
@@ -115,3 +116,9 @@ def test_durus_hata_beklenen_basliklari_listeler(tmp_path):
     yol = bakim_csv_yaz(tmp_path / "b.csv", [bakim_satir()])
     with pytest.raises(VeriHatasi, match="Durus nedeni"):
         durus_oku(yol)
+
+
+def test_ekip_sutunu_olmadan_okunur(tmp_path):
+    basliklar = [b for b in DURUS_BASLIKLARI if b != "Ekip"]
+    df, _ = durus_oku(durus_xlsx_yaz(tmp_path / "d.xlsx", [durus_satir()], basliklar=basliklar))
+    assert len(df) == 1

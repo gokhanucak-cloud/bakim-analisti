@@ -10,7 +10,7 @@ import pandas as pd
 AYAR_YOLU = Path(__file__).resolve().parent.parent / "ayarlar.json"
 DURUS_SAYFA = "Smp99_Donnees"
 DURUS_BASLIK_SATIRI = 6  # 0 tabanlı: 7. satır
-DURUS_SUTUNLARI = ["Saat", "Son", "Süre", "Zon", "Modül", "Durus nedeni", "Posta", "Ekip",
+DURUS_SUTUNLARI = ["Saat", "Son", "Süre", "Zon", "Modül", "Durus nedeni", "Posta",
                    "Kapanistaki imalat sayisi"]
 BAKIM_SUTUNLARI = ["İş Emri No", "Arıza Tipi", "OP No", "Arıza Tanımı", "Arıza Nedeni",
                    "Yapılan Müdahale", "Başlama Tarihi", "Bitiş Tarihi",
@@ -76,7 +76,6 @@ def durus_oku(yol: Path) -> tuple[pd.DataFrame, list[str]]:
         "modul": ham["Modül"].astype(str).str.strip(),
         "neden": ham["Durus nedeni"].fillna("").astype(str).str.strip(),
         "vardiya": ham["Posta"].astype(str).str.strip(),
-        "ekip": pd.to_numeric(ham["Ekip"], errors="coerce").astype("Int64"),
         "sayac": pd.to_numeric(ham["Kapanistaki imalat sayisi"], errors="coerce")
                    .fillna(0).astype(int),
     }).reset_index(drop=True)

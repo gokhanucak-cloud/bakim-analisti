@@ -14,7 +14,7 @@ Motor montaj hattındaki arızaları azaltmak, mümkünse sıfırlamak. Eklenti 
 Analiz şunları üretir:
 
 - Ro takibi
-- Posta, vardiya ve ekip bazında MTTR/MTBF
+- Posta ve vardiya bazında MTTR/MTBF
 - Pareto analiziyle darboğaz tespiti
 - "Bakım ne yaptı, kalıcı çözüm oldu mu?" eşleştirmesi
 - Önceliklendirilmiş aksiyon listesi
@@ -98,15 +98,15 @@ bakim-analisti/
 
 | KPI | Formül | Kırılımlar |
 |---|---|---|
-| Ro | vardiya üretimi ÷ 519 | vardiya, gün, Sabah/Akşam, ekip, dönem ortalaması; hedefi tutan vardiya oranı |
-| Arıza sayısı | Süre ≥ 5 dk duruş adedi | posta, vardiya, ekip, hat |
-| MTTR | Σ arıza süresi ÷ arıza sayısı | posta, vardiya, ekip, hat |
-| MTBF | (çalışılan vardiya sayısı × 435 − Σ arıza süresi) ÷ arıza sayısı | posta, vardiya, ekip, hat |
+| Ro | vardiya üretimi ÷ 519 | vardiya, gün, Sabah/Akşam, dönem ortalaması; hedefi tutan vardiya oranı |
+| Arıza sayısı | Süre ≥ 5 dk duruş adedi | posta, vardiya, hat |
+| MTTR | Σ arıza süresi ÷ arıza sayısı | posta, vardiya, hat |
+| MTBF | (çalışılan vardiya sayısı × 435 − Σ arıza süresi) ÷ arıza sayısı | posta, vardiya, hat |
 | Mikro duruş | Süre < 5 dk: adet, Σ süre, adet ÷ çalışılan saat | posta, neden |
 | Toplam kayıp | Σ süre (arıza + mikro) | posta, neden |
 | Kayıp motor (tahmini) | toplam kayıp ÷ takt süresi | posta, neden |
 
-- Vardiya/ekip kırılımında "çalışılan vardiya sayısı" o vardiyaya/ekibe ait çalışılan vardiyalardır. Hat ve posta bazında tüm çalışılan vardiyalar kullanılır.
+- Vardiya kırılımında "çalışılan vardiya sayısı" o vardiyaya ait çalışılan vardiyalardır. Hat ve posta bazında tüm çalışılan vardiyalar kullanılır.
 - Arıza sayısı 0 ise MTTR/MTBF "—" gösterilir (sonsuz/tanımsız).
 - Kayıp motor bir tahmindir: ara stoklar nedeniyle bir posta duruşu hattı her zaman durdurmaz. Raporda bu not düşülür.
 
@@ -147,7 +147,7 @@ Tek dosyadan oluşur. Dış kaynak (CDN) kullanmaz, grafikler satır içi SVG'di
 1. **Özet:** Dönem, çalışılan vardiya sayısı, ortalama Ro ve %99 hedefi, hedefi tutan vardiya oranı, toplam kayıp (dk ve motor), hat MTTR/MTBF, arıza ve mikro duruş adetleri.
 2. **Ro trendi:** Vardiya bazında çubuk grafik, %99 çizgisi, Sabah/Akşam renk ayrımı.
 3. **Darboğaz Pareto'su:** Posta Pareto grafiği (çubuk + kümülatif çizgi) ve ilk 10 posta–neden tablosu.
-4. **MTTR/MTBF:** Posta tablosu (ilk 15) ile vardiya ve ekip karşılaştırması.
+4. **MTTR/MTBF:** Posta tablosu (ilk 15) ile vardiya karşılaştırması.
 5. **Mikro duruşlar:** İlk 10 posta–neden; adet, dakika, saatteki sıklık.
 6. **Bakım eşleşmesi:** Sınıf dağılımı, "kalıcı değil" ve "kısmi" listesi (iş emri, arıza tanımı, yapılan müdahale, önce/sonra) ve kayıt açılmamış kronik duruşlar.
 7. **Aksiyon listesi:** Ajanın `aksiyonlar.json` içeriği.
@@ -173,6 +173,8 @@ Tek dosyadan oluşur. Dış kaynak (CDN) kullanmaz, grafikler satır içi SVG'di
   - OP311'in en sık duran posta olması
   - 5 Ekim Sabah üretiminin 521 olması
 - Gerçek veri dosyaları depoya eklenmez (kişisel ad ve sicil bilgileri içerir).
+
+**Karar (2026-11-05):** Duruş dosyasındaki "Ekip" sütunu kullanılmaz. Gerçek veride her vardiyada üç ekip numarası birlikte görülüyor ve anlamı belirsiz.
 
 ## 10. Kapsam dışı (şimdilik)
 - Dosyaların otomatik çekilmesi (uygulama API'si, paylaşılan klasör)
